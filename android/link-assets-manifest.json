@@ -1,0 +1,37 @@
+{
+  "migIndex": 1,
+  "data": [
+    {
+      "path": "assets/fonts/Amaranth-Italic.ttf",
+      "sha1": "6a69c85e18935d23459dbda8df4bce43afcd4ef9"
+    },
+    {
+      "path": "assets/fonts/Calistoga-Regular.ttf",
+      "sha1": "5c3a9fcbcd1b3442a1e61da58c16bcd9ed5560ad"
+    },
+    {
+      "path": "assets/fonts/Caveat-Regular.ttf",
+      "sha1": "3aa777431d98147893512898982bb73b811511d0"
+    },
+    {
+      "path": "assets/fonts/Courgette-Regular.ttf",
+      "sha1": "0e6826b92f8f80fe2eb803bdef7d81355845e283"
+    },
+    {
+      "path": "assets/fonts/Inter-Italic-VariableFont_opsz,wght.ttf",
+      "sha1": "81cca19cd01dbcfea3826e02cc1491ff7423c2b1"
+    },
+    {
+      "path": "assets/fonts/Inter-VariableFont_opsz,wght.ttf",
+      "sha1": "ee5c2e22ffeddefc433c9aa4c76779bb73a5c682"
+    },
+    {
+      "path": "assets/fonts/NunitoSans-Italic-VariableFont_YTLC,opsz,wdth,wght.ttf",
+      "sha1": "410740a6f03cfa4b36e22724178b7e9eb7920826"
+    },
+    {
+      "path": "assets/fonts/NunitoSans-VariableFont_YTLC,opsz,wdth,wght.ttf",
+      "sha1": "8c01360cd531b3c1988d314db01656c8ef45207c"
+    }
+  ]
+}
