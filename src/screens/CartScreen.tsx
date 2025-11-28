@@ -19,7 +19,7 @@ const initialCart = [
     price: 4.29,
     size: 'L',
     qty: 1,
-    image: require('../cappuccino/square/cappuccino_pic_1_square.png'),
+    image: require('../img/Hot Coffee/Americano.jpeg'),
   },
   {
     id: 2,
@@ -28,7 +28,7 @@ const initialCart = [
     price: 5.49,
     size: 'M',
     qty: 1,
-    image: require('../cappuccino/square/cappuccino_pic_2_square.png'),
+    image: require('../img/Hot Coffee/Cappucino.jpg'),
   },
   {
     id: 3,
@@ -37,7 +37,7 @@ const initialCart = [
     price: 4.99,
     size: 'S',
     qty: 1,
-    image: require('../cappuccino/square/cappuccino_pic_3_square.png'),
+    image: require('../img/Hot Coffee/Espresso.webp'),
   },
 ];
 
