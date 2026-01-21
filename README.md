@@ -1,7 +1,9 @@
 Tema Project (Coffee Shop)
-Tautan source code Github (https://github.com/xiaditshiro/coffee-app)
+Source code React Native : https://github.com/xiaditshiro/coffee-app.git
 
-Tautan video youtube (https://youtu.be/EzlzcDOH8n8)
+Source code Backend : https://github.com/xiaditshiro/Database_coofex_shope.git
+
+Tautan video youtube : https://youtu.be/Zpkdjes7_Nw
 
 Nama Kelompok
 I Gede Aditya Wira Pranata (230040097)
