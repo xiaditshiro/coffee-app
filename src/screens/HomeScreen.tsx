@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   ScrollView,
   View,
@@ -8,59 +8,99 @@ import {
   TouchableOpacity,
   StyleSheet,
   StatusBar,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { coffeeBeans } from '../data/cakecard';
-import { coffeeCards } from '../data/CoffeeCards';
 import { useNavigation } from '@react-navigation/native';
+import { fetchCoffee, fetchCake, IMAGE_URL, addToCart } from '../api';
 
 
 
 
-// 🟤 Tipe data untuk kopi
+// ======================
+// TIPE DATA PRODUK
+// ======================
+type Product = {
+  id: number;
+  nama_produk: string;
+  harga: number;
+  deskripsi: string;
+  gambar: string;
+  category_id: number;
+  nama_kategori?: string;
+};
 
+const USER_ID = 1;
+
+// ======================
+// KATEGORI COFFEE
+// ======================
 const categories = ['All', 'Signature', 'Hot Coffee', 'Ice Coffee'];
 
+const categoryMap: any = {
+  Signature: 3,
+  'Hot Coffee': 4,
+  'Ice Coffee': 5,
+};
+
 const HomeScreen: React.FC = () => {
-  const [activeCategory, setActiveCategory] = useState<string>('All');
   const navigation = useNavigation<any>();
+  const [activeCategory, setActiveCategory] = useState('All');
+  const [coffeeProducts, setCoffeeProducts] = useState<Product[]>([]);
+  const [cakeProducts, setCakeProducts] = useState<Product[]>([]);
 
-  // Filter berdasarkan kategori aktif
-const filteredCoffees =
-  activeCategory === 'All'
-    ? coffeeCards
-    : coffeeCards.filter((item) => item.category === activeCategory);
+  useEffect(() => {
+    const getCoffee = async () => {
+      try {
+        const categoryId = activeCategory !== 'All' ? categoryMap[activeCategory] : undefined;
+        const res = await fetchCoffee(categoryId);
+        setCoffeeProducts(res.data);
+      } catch (err) {
+        console.log('Error fetch coffee:', err);
+      }
+    };
 
+    const getCake = async () => {
+      try {
+        const res = await fetchCake();
+        setCakeProducts(res.data);
+      } catch (err) {
+        console.log('Error fetch cake:', err);
+      }
+    };
 
-  const statusBarHeight =
-    StatusBar.currentHeight ? StatusBar.currentHeight + 10 : 40;
+    getCoffee();
+    getCake();
+  }, [activeCategory]);
+
+  const handleAddToCart = async (productId: number) => {
+  try {
+    await addToCart(USER_ID, productId);
+    Alert.alert('Produk masuk ke cart');
+  } catch (error) {
+    Alert.alert('Gagal menambahkan ke cart');
+  }
+};
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#0D0D14" />
 
       <ScrollView showsVerticalScrollIndicator={false}>
-        {/* Header */}
+        {/* ================= HEADER ================= */}
         <View style={styles.header}>
           <View style={styles.headerRow}>
             <View style={styles.logoRow}>
               <Image
-                source={require('../img/Logo/Logo Shiro Creation 1.png')} 
+                source={require('../img/Logo/Logo Shiro Creation 1.png')}
                 style={styles.logo}
               />
               <Text style={styles.appName}>Shiro Coffee</Text>
             </View>
-            <TouchableOpacity 
-              onPress={() => navigation.navigate('Profile')}
-            >
-              <Image
-                source={require('../img/Profile/COLUMBINA.jpeg')} 
-                style={styles.profilePic}
-              />
-            </TouchableOpacity>
           </View>
 
           <Text style={styles.title}>Find the best coffee for you</Text>
+
           <TextInput
             placeholder="Find your coffee..."
             placeholderTextColor="#888"
@@ -68,9 +108,9 @@ const filteredCoffees =
           />
         </View>
 
-        {/* Categories */}
+        {/* ================= CATEGORY ================= */}
         <View style={styles.categoryContainer}>
-          {categories.map((item) => (
+          {categories.map(item => (
             <TouchableOpacity key={item} onPress={() => setActiveCategory(item)}>
               <Text
                 style={[
@@ -84,29 +124,33 @@ const filteredCoffees =
           ))}
         </View>
 
-        {/* Coffee Cards */}
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={styles.cardScroll}
-        >
-          {filteredCoffees.map((coffee) => (
+        {/* ================= COFFEE ================= */}
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          {coffeeProducts.map(coffee => (
             <TouchableOpacity
               key={coffee.id}
               style={styles.card}
-              onPress={() => navigation.navigate('ProductDetail', { coffee })}
+              onPress={() =>
+                navigation.navigate('ProductDetail', { product: coffee })
+              }
             >
-              <Image source={typeof coffee.image === 'string' ? { uri: coffee.image } : coffee.image} style={styles.cardImage} />
+             <Image
+                source={{ uri: `${IMAGE_URL}/product/${coffee.gambar}` }}
+                style={styles.cardImage}
+              />
+
+
               <View style={styles.cardInfo}>
-                <View style={styles.rating}>
-                  <Text style={styles.ratingText}>⭐ {coffee.rating}</Text>
-                </View>
-                <Text style={styles.cardTitle}>{coffee.name}</Text>
-                <Text style={styles.cardDesc}>{coffee.desc}</Text>
+                <Text style={styles.cardTitle}>{coffee.nama_produk}</Text>
+                <Text style={styles.cardDesc}>{coffee.deskripsi}</Text>
+
                 <View style={styles.priceRow}>
-                  <Text style={styles.price}>{coffee.price}</Text>
-                  <TouchableOpacity style={styles.addButton}>
-                    <Text style={{ color: '#fff', fontSize: 16 }}>+</Text>
+                  <Text style={styles.price}>Rp {coffee.harga}</Text>
+                  <TouchableOpacity
+                    style={styles.addButton}
+                    onPress={() => handleAddToCart(coffee.id)}
+                  >
+                    <Text style={{ color: '#fff' }}>+</Text>
                   </TouchableOpacity>
                 </View>
               </View>
@@ -114,51 +158,47 @@ const filteredCoffees =
           ))}
         </ScrollView>
 
+        {/* ================= CAKE ================= */}
+        <Text style={styles.sectionTitle}>Cake</Text>
+
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          {cakeProducts.map(cake => (
+            <TouchableOpacity
+              key={cake.id}
+              style={styles.card}
+              onPress={() =>
+                navigation.navigate('ProductDetail', { product: cake })
+              }
+            >
+              <Image
+                source={{ uri: `${IMAGE_URL}/product/${cake.gambar}` }}
+                style={styles.cardImage}
+              />
 
 
-        {/* cake */}
-<Text style={styles.sectionTitle}>Cake</Text>
-<ScrollView
-  horizontal
-  showsHorizontalScrollIndicator={false}
-  style={styles.cardScroll}
->
-  {coffeeBeans.map((coffee) => (
-    <TouchableOpacity
-      key={coffee.id}
-      style={styles.card}
-      onPress={() => navigation.navigate("ProductDetail", { coffee })}
-    >
-      <Image source={typeof coffee.image === 'string' ? { uri: coffee.image } : coffee.image} style={styles.cardImage} />
+              <View style={styles.cardInfo}>
+                <Text style={styles.cardTitle}>{cake.nama_produk}</Text>
+                <Text style={styles.cardDesc}>{cake.deskripsi}</Text>
 
+                <View style={styles.priceRow}>
+                  <Text style={styles.price}>Rp {cake.harga}</Text>
+                  <TouchableOpacity
+                    style={styles.addButton}
+                    onPress={() => handleAddToCart(cake.id)}
+                  >
+                    <Text style={{ color: '#fff' }}>+</Text>
+                  </TouchableOpacity>
 
-      <View style={styles.cardInfo}>
-        <View style={styles.rating}>
-          <Text style={styles.ratingText}>⭐ {coffee.rating}</Text>
-        </View>
-
-        <Text style={styles.cardTitle}>{coffee.name}</Text>
-        <Text style={styles.cardDesc}>{coffee.desc}</Text>
-
-        <View style={styles.priceRow}>
-          <Text style={styles.price}>{coffee.price}</Text>
-
-          <TouchableOpacity style={styles.addButton}>
-            <Text style={{ color: '#fff', fontSize: 16 }}>+</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    </TouchableOpacity>
-  ))}
-</ScrollView>
-
-
-
-        
+                </View>
+              </View>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
       </ScrollView>
     </SafeAreaView>
   );
 };
+
 
 // 🧾 StyleSheet
 const styles = StyleSheet.create({

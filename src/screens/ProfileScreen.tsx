@@ -9,10 +9,20 @@ import {
   ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { IMAGE_URL } from '../api';
+import { useNavigation } from '@react-navigation/native';
+
+
 
 const ProfileScreen: React.FC = () => {
-    StatusBar.currentHeight ? StatusBar.currentHeight + 10 : 40;
+    const navigation = useNavigation<any>();
 
+    StatusBar.currentHeight ? StatusBar.currentHeight + 10 : 40;
+    const user = {
+    username: 'Shiro Neko',
+    email: 'shiro@example.com',
+    profile_image: '1768628696580.png',
+  };
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#0D0D14" />
@@ -23,7 +33,7 @@ const ProfileScreen: React.FC = () => {
         {/* Profile Card */}
         <View style={styles.profileCard}>
           <Image
-            source={require('../img/Profile/COLUMBINA.jpeg')} // ganti foto profilmu
+            source={{ uri: `${IMAGE_URL}/profile/${user.profile_image}` }} // ganti foto profilmu
             style={styles.profileImage}
           />
 
@@ -54,15 +64,25 @@ const ProfileScreen: React.FC = () => {
           <TouchableOpacity style={styles.menuItem}>
             <Text style={styles.menuText}>Help & Support</Text>
           </TouchableOpacity>
-        </View>
 
+          
+
+        </View>
+        <TouchableOpacity
+            style={[styles.menuItem, styles.addProduct]}
+            onPress={() => navigation.navigate('AddEditProduct')}
+          >
+            <Text style={styles.menuText}>➕ Tambah Produk</Text>
+          </TouchableOpacity>
         {/* Logout Button */}
         <TouchableOpacity style={styles.logoutBtn}>
           <Text style={styles.logoutText}>Logout</Text>
         </TouchableOpacity>
 
         <View style={{ height: 80 }} />
+        
       </ScrollView>
+      
     </SafeAreaView>
   );
 };
@@ -128,6 +148,14 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontFamily: 'Caveat-Regular',
+  },
+
+  addProduct: {
+    backgroundColor: '#1E1E28',
+    borderRadius: 12,
+    marginHorizontal: 10,
+    marginVertical: 5,
+    
   },
 
   logoutBtn: {

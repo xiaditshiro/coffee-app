@@ -1,59 +1,67 @@
 // OrderHistoryScreen.tsx
-import React from 'react';
-import { View, Text, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
+import React, { useCallback, useState } from 'react';
+import {
+  View,
+  Text,
+  FlatList,
+  StyleSheet,
+  TouchableOpacity,
+  StatusBar,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useFocusEffect } from '@react-navigation/native';
+import { fetchOrderHistory } from '../api';
 
+const USER_ID = 1;
 
-// Interface untuk tampilan history order
+// Interface sesuai API
 interface OrderHistoryItem {
-  id: string;
+  id: number;
   items: string[];
   total: number;
-  date: string;
+  tanggal: string;
   status: 'Completed' | 'Ready for Pickup';
 }
 
-const OrderHistoryScreen = () => {
-  const orders: OrderHistoryItem[] = [
-    {
-      id: '1',
-      items: ['Cappuccino', 'Latte'],
-      total: 8.50,
-      date: '2025-02-01 14:35',
-      status: 'Completed',
-    },
-    {
-      id: '2',
-      items: ['Espresso'],
-      total: 3.20,
-      date: '2025-02-03 10:12',
-      status: 'Completed',
-    },
-    {
-      id: '3',
-      items: ['Iced Americano', 'Croissant'],
-      total: 7.10,
-      date: '2025-02-05 17:42',
-      status: 'Ready for Pickup',
-    },
-  ];
+const OrderHistoryScreen: React.FC = () => {
+  const [orders, setOrders] = useState<OrderHistoryItem[]>([]);
 
-  // Card
+  // LOAD DATA SAAT SCREEN DIBUKA
+  useFocusEffect(
+    useCallback(() => {
+      const loadOrders = async () => {
+        try {
+          const res = await fetchOrderHistory(USER_ID);
+          console.log('ORDER HISTORY RESPONSE:', res.data);
+          setOrders(res.data);
+        } catch (err) {
+          console.log('Gagal ambil order history', err);
+        }
+      };
+
+      loadOrders();
+    }, [])
+  );
+
+
   const renderItem = ({ item }: { item: OrderHistoryItem }) => (
     <View style={styles.card}>
       <View style={{ marginBottom: 6 }}>
         <Text style={styles.orderId}>Order #{item.id}</Text>
         <Text style={styles.items}>{item.items.join(', ')}</Text>
-        <Text style={styles.date}>{item.date}</Text>
+        <Text style={styles.date}>{item.tanggal}</Text>
       </View>
 
       <View style={styles.footer}>
-        <Text style={styles.total}>${item.total.toFixed(2)}</Text>
+        <Text style={styles.total}>Rp {item.total}</Text>
 
         <View
           style={[
             styles.statusBadge,
-            { backgroundColor: item.status === 'Completed' ? '#4CAF50' : '#E38B29' },
+            {
+              backgroundColor:
+                item.status === 'Completed' ? '#4CAF50' : '#E38B29',
+            },
           ]}
         >
           <Text style={styles.statusText}>{item.status}</Text>
@@ -68,13 +76,18 @@ const OrderHistoryScreen = () => {
 
   return (
     <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="light-content" backgroundColor="#0D0D14" />
+
       <Text style={styles.header}>Order History</Text>
 
       <FlatList
         data={orders}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item) => item.id.toString()}
         renderItem={renderItem}
         showsVerticalScrollIndicator={false}
+        ListEmptyComponent={
+          <Text style={styles.empty}>Belum ada riwayat order</Text>
+        }
       />
 
       <View style={{ height: 80 }} />
@@ -169,6 +182,14 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
+    fontFamily: 'Courgette-Regular',
+  },
+
+  empty: {
+    color: '#888',
+    fontSize: 16,
+    textAlign: 'center',
+    marginTop: 20,
     fontFamily: 'Courgette-Regular',
   },
 });

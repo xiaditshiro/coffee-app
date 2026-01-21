@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -9,70 +9,80 @@ import {
   StatusBar,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { fetchCart, IMAGE_URL, updateCartQty, deleteCartItem } from '../api';
+import { useFocusEffect } from '@react-navigation/native';
+import { Alert } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { checkout } from '../api';
 
-// Dummy data Cart
-const initialCart = [
-  {
-    id: 1,
-    name: 'Americano',
-    desc: 'With Steamed Milk',
-    price: 4.29,
-    size: 'L',
-    qty: 1,
-    image: require('../img/Hot Coffee/Americano.jpeg'),
-  },
-  {
-    id: 2,
-    name: 'Latte',
-    desc: 'Creamy Taste',
-    price: 5.49,
-    size: 'M',
-    qty: 1,
-    image: require('../img/Hot Coffee/Cappucino.jpg'),
-  },
-  {
-    id: 3,
-    name: 'Cappuccino',
-    desc: 'Foamy & Bold',
-    price: 4.99,
-    size: 'S',
-    qty: 1,
-    image: require('../img/Hot Coffee/Espresso.webp'),
-  },
-];
+
+
+
+const USER_ID = 1;
+
 
 const CartScreen: React.FC = () => {
-  const [cart, setCart] = useState(initialCart);
+  const [cart, setCart] = useState<any[]>([]);
+  const navigation = useNavigation<any>();
 
-  // TAMBAH QTY
-  const increaseQty = (id: number) => {
-    setCart((prev) =>
-      prev.map((item) =>
-        item.id === id ? { ...item, qty: item.qty + 1 } : item
-      )
-    );
-  };
+useFocusEffect(
+  useCallback(() => {
+    const loadCart = async () => {
+      try {
+        const res = await fetchCart(USER_ID);
+        setCart(res.data);
+      } catch (err) {
+        console.log('Gagal ambil cart', err);
+      }
+    };
 
-  // KURANG QTY
-  const decreaseQty = (id: number) => {
-    setCart((prev) =>
-      prev.map((item) =>
-        item.id === id && item.qty > 1
-          ? { ...item, qty: item.qty - 1 }
-          : item
-      )
-    );
-  };
+    loadCart();
+  }, [])
+);
 
-  // REMOVE ITEM
-  const removeItem = (id: number) => {
-    setCart((prev) => prev.filter((item) => item.id !== id));
-  };
+// Update QTY
+const handleQtyChange = async (cartId: number, newQty: number) => {
+  if (newQty < 1) return;
+
+  try {
+    await updateCartQty(cartId, newQty);
+    const res = await fetchCart(USER_ID);
+    setCart(res.data);
+  } catch (err) {
+    console.log('Gagal update qty', err);
+  }
+};
+
+// Delete Cart Item
+const handleDelete = async (cartId: number) => {
+  try {
+    await deleteCartItem(cartId);
+    const res = await fetchCart(USER_ID);
+    setCart(res.data);
+  } catch (err) {
+    console.log('Gagal hapus cart', err);
+  }
+};
+
+// Checkout
+const handleCheckout = async () => {
+  try {
+    await checkout(USER_ID);
+    Alert.alert('Checkout berhasil');
+    navigation.navigate('OrderHistory');
+  } catch {
+    Alert.alert('Checkout gagal');
+  }
+};
 
   // TOTAL HARGA
   const totalPrice = cart
-    .reduce((sum, item) => sum + item.price * item.qty, 0)
-    .toFixed(2);
+    .reduce((sum, item) => sum + item.harga * item.qty, 0)
+    .toFixed(0);
+
+  useEffect(() => {
+    console.log('DATA CART:', cart);
+  }, [cart]);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -81,27 +91,27 @@ const CartScreen: React.FC = () => {
       <Text style={styles.header}>My Cart</Text>
 
       <ScrollView showsVerticalScrollIndicator={false}>
-        {cart.map((item) => (
+        {cart.map(item => (
           <View key={item.id} style={styles.card}>
-            <Image source={item.image} style={styles.image} />
+            <Image
+              source={{ uri: `${IMAGE_URL}/product/${item.gambar}` }}
+              style={styles.image}
+            />
+
 
             <View style={styles.info}>
-              <Text style={styles.title}>{item.name}</Text>
-              <Text style={styles.desc}>{item.desc}</Text>
+              <Text style={styles.title}>{item.nama_produk}</Text>
+              <Text style={styles.desc}>{item.deskripsi}</Text>
 
               <View style={styles.row}>
-                <TouchableOpacity style={styles.sizeBtn}>
-                  <Text style={styles.sizeText}>{item.size}</Text>
-                </TouchableOpacity>
-
-                <Text style={styles.price}>${item.price}</Text>
+                <Text style={styles.price}>Rp {item.harga}</Text>
               </View>
 
               {/* QTY */}
               <View style={styles.qtyContainer}>
                 <TouchableOpacity
                   style={styles.qtyBtn}
-                  onPress={() => decreaseQty(item.id)}
+                  onPress={() => handleQtyChange(item.id, item.qty - 1)}
                 >
                   <Text style={styles.qtyText}>−</Text>
                 </TouchableOpacity>
@@ -112,19 +122,18 @@ const CartScreen: React.FC = () => {
 
                 <TouchableOpacity
                   style={styles.qtyBtn}
-                  onPress={() => increaseQty(item.id)}
+                  onPress={() => handleQtyChange(item.id, item.qty + 1)}
                 >
                   <Text style={styles.qtyText}>+</Text>
                 </TouchableOpacity>
               </View>
-
-              {/* REMOVE */}
               <TouchableOpacity
                 style={styles.removeBtn}
-                onPress={() => removeItem(item.id)}
+                onPress={() => handleDelete(item.id)}
               >
                 <Text style={styles.removeText}>Remove</Text>
               </TouchableOpacity>
+
             </View>
           </View>
         ))}
@@ -132,17 +141,20 @@ const CartScreen: React.FC = () => {
         <View style={{ height: 120 }} />
       </ScrollView>
 
-      {/* FOOTER TOTAL + CHECKOUT */}
+      {/* FOOTER */}
       <View style={styles.footer}>
-        <Text style={styles.totalText}>Total: ${totalPrice}</Text>
+        <Text style={styles.totalText}>Total: Rp {totalPrice}</Text>
 
-        <TouchableOpacity style={styles.checkoutBtn}>
+        <TouchableOpacity style={styles.checkoutBtn} onPress={handleCheckout}>
           <Text style={styles.checkoutText}>Checkout</Text>
         </TouchableOpacity>
+
       </View>
     </SafeAreaView>
   );
 };
+
+
 
 
 
